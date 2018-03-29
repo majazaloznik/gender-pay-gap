@@ -1,3 +1,56 @@
+
+#' create company df with correct gender distribution
+#'
+#' Pick the ith company from the list and extract the gender composition of the 
+#' four quartiles, then create a dataframe with 400 employees tht has the
+#' correct distribution of men and women in each quartile. 
+#'
+#' @param i row index
+#'
+#' @return a two column dataframe with variables quartile (1:4) and group 
+#' where 1 is women and 2 is men
+
+get_company <- function(i) {
+  gender_distribution <- gpg_df[i,] %>% 
+    select(FemaleLowerQuartile,
+           FemaleLowerMiddleQuartile,
+           FemaleUpperMiddleQuartile,
+           FemaleTopQuartile) %>% 
+    round()
+  my_company <- data.frame(group = c(rep(1, gender_distribution[1]),
+                                     rep(2, 100 - gender_distribution[1]),
+                                     rep(1, gender_distribution[2]),
+                                     rep(2, 100 - gender_distribution[2]),
+                                     rep(1, gender_distribution[3]),
+                                     rep(2, 100 - gender_distribution[3]),
+                                     rep(1, gender_distribution[4]),
+                                     rep(2, 100 - gender_distribution[4])),
+                           quartile = rep(1:4, each = 100))
+  return(my_company)
+}
+
+#' Sample from income distribution to get people's wages
+#'
+#' usin my_company as a df of employees with genders and knowing which quartile 
+#' they are in, we sample from a percentile distribution of UK wages (2015)
+#' And get everyone their wage. 
+#' 
+#' @param my_company a df with the variable quartile for each employee
+#'
+#' @return a data frame with an additional variable income
+
+get_incomes <- function(my_company) {
+  my_company %>% 
+    mutate(percentile = (quartile-1) * 25 + sample(1:25, n(), replace = TRUE)) %>% 
+    rowwise() %>% 
+    mutate( income = round(runif(1, distr_df$min_public[percentile],
+                                 distr_df$public[percentile])*2))  -> my_company
+  return(my_company)
+}
+
+
+
+
 #' Arrange data into quartiles
 #'
 #' Takes  a data frame with an income variable \code{income}
@@ -21,7 +74,7 @@ quartile_data <- function(df) {
     arrange(income) %>% 
     mutate(quartile = rep(c(1,2.2,3.4,4.6), each = nrow(df)/4)) %>% 
     arrange(quartile, group) %>% 
-    mutate(poz = rep(seq(0,.8,0.2),nrow(df)/5),
+    mutate(poz = rep(seq(0,.9,0.1),nrow(df)/10),
            poz = poz + as.numeric(quartile))  -> df
 }
 
@@ -46,7 +99,7 @@ quartile_dotplot <- function(df) {
              bty = "n", axes = FALSE,
              col = c("red"),
              ylim = c(0,15))
-  stripchart(df$poz[df$group ==1], method="stack", offset=0.5, pch=15,
+  stripchart(df$poz[df$group ==2], method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
              col = c("black"), add = TRUE,
              ylim = c(0,15))
@@ -68,37 +121,48 @@ gender_dotplot <- function(df) {
   stripchart(df$income, method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
              col = c("red"),
-             ylim = c(0,15))
-  abline(v = median(df$income[df$group ==1]), col = "black")
-  abline(v = median(df$income[df$group ==2]), col = "red")
-  abline(v = mean(df$income[df$group ==1]), col = "black", lty = 2)
-  abline(v = mean(df$income[df$group ==2]), col = "red", lty = 2)
+             ylim = c(0,30))
+  abline(v = median(df$income[df$group ==2]), col = "black")
+  abline(v = median(df$income[df$group ==1]), col = "red")
+  abline(v = mean(df$income[df$group ==2]), col = "black", lty = 2)
+  abline(v = mean(df$income[df$group ==1]), col = "red", lty = 2)
+  mean_dif = (mean(df$income[df$group ==2])-mean(df$income[df$group ==1]))/mean(df$income[df$group ==2])
+  median_dif = (median(df$income[df$group ==2])-median(df$income[df$group ==1]))/median(df$income[df$group ==2])
+  
   stripchart(df$income, method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
              col = c("red"), add = TRUE,
-             ylim = c(0,15))
-  stripchart(df$income[df$group ==1], method="stack", offset=0.5, pch=15,
+             ylim = c(0,30))
+  stripchart(df$income[df$group ==2], method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
              col = c("black"), add = TRUE,
-             ylim = c(0,15))
+             ylim = c(0,30))
+  text(40, 20, labels = paste0("mean difference = ", round(mean_dif*100,2)))
+  text(40, 23, labels = paste0("median difference = ", round(median_dif*100,2)))
 }
 
+
+#' Swap lowest paid woman for man
+#'
+#' Takes the dataframe and finds the lowest paid woman and turns 
+#' her into a man i.e. fires and replaces. The `ifelse` in `mutate`
+#' will however find all the women with the lowest wage, so it may
+#' occasionally replace more than one person. But it's not going
+#' to happen often, and it isn't that obvious, so I'll leave it.
+#' 
+#' @param df dataframe with income and gender
+#'
+#' @return updated df with one changed gender
 
 swap_worker <- function(df) {
   df %>% 
     arrange(income) %>% 
     group_by(group) %>% 
-    mutate(temp = min(income)) %>% 
+    mutate(min_income = min(income)) %>% 
+    group_by(group, income) %>% 
+    mutate(id = 1:n(),
+           selection = ifelse(group == 1 & income == min_income & id == sample(1:n(),1),1,0)) %>% 
     ungroup() %>% 
-      mutate(group = ifelse(group ==1 & income == min(income), 2, group)) %>% 
-  select(-temp) -> df
+    mutate(group = ifelse(selection == 1, 2, group)) -> df
+  return(df)
 }
-
-swap_worker_sample <- function(df) {
-df$group[df$group==2 & df$income < -.1 ][sample(seq(length(df$group[df$group==2 & df$income < -.1 ])),1)] <- 1
-}
-
-
-
-debug(swap_worker_sample)
-df$group[df$group==2 & df$income < -.1 ][length(df$group[df$group==2 & df$income< -.1 ])] <- 1
