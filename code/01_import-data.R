@@ -24,3 +24,11 @@ distr_df %>%
   mutate(min_public = lag(public, default = 5),
                   min_private = lag(private,1, default = 5)) -> distr_df
   
+# Eurostat data was manually downloaded
+# http://ec.europa.eu/eurostat/tgm/table.do?tab=table&init=1&plugin=1&language=en&pcode=t2020_10
+# Employment rate by sex 20-64
+# http://ec.europa.eu/eurostat/tgm/table.do?tab=table&init=1&plugin=1&language=en&pcode=tsdsc340
+# Gender pay gap hourly, mean
+
+eu_gpg_labourpart <- read_csv("data/eu.csv")
+  
