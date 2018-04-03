@@ -1,5 +1,5 @@
-
-#' create company df with correct gender distribution
+# =============================================================================
+#' create company df with correct gender distribution 
 #'
 #' Pick the ith company from the list and extract the gender composition of the 
 #' four quartiles, then create a dataframe with 400 employees tht has the
@@ -10,7 +10,7 @@
 #' @return a two column dataframe with variables quartile (1:4) and group 
 #' where 1 is women and 2 is men
 
-get_company <- function(i) {
+get_company <- function(i, total = 400) {
   gender_distribution <- gpg_df[i,] %>% 
     select(FemaleLowerQuartile,
            FemaleLowerMiddleQuartile,
@@ -18,17 +18,18 @@ get_company <- function(i) {
            FemaleTopQuartile) %>% 
     round()
   my_company <- data.frame(group = c(rep(1, gender_distribution[1]),
-                                     rep(2, 100 - gender_distribution[1]),
+                                     rep(2, total/4 - gender_distribution[1]),
                                      rep(1, gender_distribution[2]),
-                                     rep(2, 100 - gender_distribution[2]),
+                                     rep(2, total/4 - gender_distribution[2]),
                                      rep(1, gender_distribution[3]),
-                                     rep(2, 100 - gender_distribution[3]),
+                                     rep(2, total/4 - gender_distribution[3]),
                                      rep(1, gender_distribution[4]),
-                                     rep(2, 100 - gender_distribution[4])),
-                           quartile = rep(1:4, each = 100))
+                                     rep(2, total/4 - gender_distribution[4])),
+                           quartile = rep(1:4, each = total/4))
   return(my_company)
 }
 
+# =============================================================================
 #' Sample from income distribution to get people's wages
 #'
 #' usin my_company as a df of employees with genders and knowing which quartile 
@@ -50,7 +51,7 @@ get_incomes <- function(my_company) {
 
 
 
-
+# =============================================================================
 #' Arrange data into quartiles
 #'
 #' Takes  a data frame with an income variable \code{income}
@@ -78,7 +79,7 @@ quartile_data <- function(df) {
            poz = poz + as.numeric(quartile))  -> df
 }
 
-
+# =============================================================================
 #' Quartile dotplot of income by gender
 #' 
 #' Plots a type of binned dotplot, where instead of four single width columns
@@ -94,18 +95,18 @@ quartile_data <- function(df) {
 #' @return plots a dotplot
 #'
 
-quartile_dotplot <- function(df) {
+quartile_dotplot <- function(df, col.f, col.m, ylim =c(-5,20) ) {
   stripchart(df$poz, method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
-             col = c("red"),
-             ylim = c(0,15))
+             col = c(col.f),
+             ylim = ylim)
   stripchart(df$poz[df$group ==2], method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
-             col = c("black"), add = TRUE,
-             ylim = c(0,15))
+             col = c(col.m), add = TRUE,
+             ylim = ylim)
 }
 
-
+# =============================================================================
 #' Dotplot with two groups and means/medians
 #'
 #' Plots a dotplot of the income distribution of two groups, which 
@@ -117,31 +118,43 @@ quartile_dotplot <- function(df) {
 #' @return plot
 
 
-gender_dotplot <- function(df) {
+gender_dotplot <- function(df, col.f, col.m, mean = TRUE, median = TRUE) {
   stripchart(df$income, method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
-             col = c("red"),
+             col = c(col.f),
              ylim = c(0,30))
-  abline(v = median(df$income[df$group ==2]), col = "black")
-  abline(v = median(df$income[df$group ==1]), col = "red")
-  abline(v = mean(df$income[df$group ==2]), col = "black", lty = 2)
-  abline(v = mean(df$income[df$group ==1]), col = "red", lty = 2)
-  mean_dif = (mean(df$income[df$group ==2])-mean(df$income[df$group ==1]))/mean(df$income[df$group ==2])
-  median_dif = (median(df$income[df$group ==2])-median(df$income[df$group ==1]))/median(df$income[df$group ==2])
+  if (median) {
+    abline(v = median(df$income[df$group ==2]), col = col.m)
+    abline(v = median(df$income[df$group ==1]), col = col.f)
+    median_dif = (median(df$income[df$group ==2]) - 
+                    median(df$income[df$group ==1]))/
+      median(df$income[df$group ==2])
+    text(70, 23, labels = paste0("Median gap = ", 
+                                 round(median_dif*100,2)),
+         family = "Georgia", cex = .8)
+  }
+  if (mean) {
+    abline(v = mean(df$income[df$group ==2]), col = col.m, lty = 2)
+    abline(v = mean(df$income[df$group ==1]), col = col.f, lty = 2)
+    mean_dif = (mean(df$income[df$group ==2]) - 
+                  mean(df$income[df$group ==1])) /
+      mean(df$income[df$group ==2])
+    text(70, 20, labels = paste0("Mean gap = ", 
+                                 round(mean_dif*100,2)),
+         family = "Georgia", cex = .8)
+  }
   
   stripchart(df$income, method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
-             col = c("red"), add = TRUE,
+             col = c(col.f), add = TRUE,
              ylim = c(0,30))
   stripchart(df$income[df$group ==2], method="stack", offset=0.5, pch=15,
              bty = "n", axes = FALSE,
-             col = c("black"), add = TRUE,
+             col = c(col.m), add = TRUE,
              ylim = c(0,30))
-  text(40, 20, labels = paste0("mean difference = ", round(mean_dif*100,2)))
-  text(40, 23, labels = paste0("median difference = ", round(median_dif*100,2)))
 }
 
-
+# =============================================================================
 #' Swap lowest paid woman for man
 #'
 #' Takes the dataframe and finds the lowest paid woman and turns 
