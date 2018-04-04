@@ -131,7 +131,7 @@ gender_dotplot <- function(df, col.f, col.m, mean = TRUE, median = TRUE) {
       median(df$income[df$group ==2])
     text(70, 23, labels = paste0("Median gap = ", 
                                  round(median_dif*100,2)),
-         family = "Georgia", cex = .8)
+         family = "Georgia", cex = .9)
   }
   if (mean) {
     abline(v = mean(df$income[df$group ==2]), col = col.m, lty = 2)
@@ -141,7 +141,7 @@ gender_dotplot <- function(df, col.f, col.m, mean = TRUE, median = TRUE) {
       mean(df$income[df$group ==2])
     text(70, 20, labels = paste0("Mean gap = ", 
                                  round(mean_dif*100,2)),
-         family = "Georgia", cex = .8)
+         family = "Georgia", cex = .9)
   }
   
   stripchart(df$income, method="stack", offset=0.5, pch=15,

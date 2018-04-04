@@ -4,6 +4,7 @@ library(dplyr)
 
 # download (current?) reported data for UK companies from 
 gpg_df <- read_csv("https://gender-pay-gap.service.gov.uk/Viewing/download-data?year=2017")
+gpg_df$id <- 1:nrow(gpg_df)
 
 # dowlnoad 2015 percentile distribution of UK wages
 
