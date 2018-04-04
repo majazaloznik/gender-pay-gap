@@ -1,6 +1,6 @@
 ## Don't mind the gap
 
-This is the code used to illustrate and animate the [**Don't mind the gap**]() blog post, published on the OIPA blog 4.4.2018. 
+This is the code used to illustrate and animate the [**Don't mind the gap**](https://www.ageing.ox.ac.uk/blog/gender-pay-gap) blog post, published on the OIPA blog 4.4.2018. 
 
 ------
 
@@ -15,7 +15,7 @@ In the post I discuss:
 *	There is a danger of the gap becoming victim of Goodhart’s law: when the measure becomes the target and therefore ceases to be a good measure. 
 *	Other unintended consequences.
 
-But you should read it [here]().
+But you should read it [here](https://www.ageing.ox.ac.uk/blog/gender-pay-gap).
 
 ------
 
