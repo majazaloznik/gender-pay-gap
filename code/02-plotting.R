@@ -1,9 +1,12 @@
-source("code/01_import-data.R")
+source("code/01-import-data.R")
 source("code/my-functions.R")
 library(animation)
 library(extrafont)
 
-loadfonts(device = "win")
+switch(Sys.info()[['sysname']],
+       Windows= {loadfonts(device = "win")},
+       Linux  = {},
+       Darwin = {})
 
 # gender colours:
 col.m <- "cyan4"
