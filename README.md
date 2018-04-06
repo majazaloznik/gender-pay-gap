@@ -27,4 +27,4 @@ The code here is for a few charts, and this gif:
 
 The code should all be selfcontained, but has no error handling. Run with the following line:
 
-`source("code/02_plotting.R")`
+`source("code/02-plotting.R")`
